@@ -1,7 +1,15 @@
 package com.example.assignment6server.services;
 
 import com.example.assignment6server.models.Course;
+import com.example.assignment6server.models.Lesson;
 import com.example.assignment6server.models.Module;
+import com.example.assignment6server.models.Topic;
+import com.example.assignment6server.models.Widget;
+import com.example.assignment6server.repositories.CourseRepository;
+import com.example.assignment6server.repositories.LessonRepository;
+import com.example.assignment6server.repositories.ModuleRepository;
+import com.example.assignment6server.repositories.TopicRepository;
+import com.example.assignment6server.repositories.WidgetRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;

@@ -1,5 +1,10 @@
 package com.example.assignment6server.services;
 
+import com.example.assignment6server.models.LinkWidget;
+import com.example.assignment6server.models.Widget;
+import com.example.assignment6server.repositories.LinkWidgetRepository;
+import com.example.assignment6server.repositories.TopicRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
