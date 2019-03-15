@@ -1,13 +1,28 @@
-package com.example.wbdvassignment5javaserver.models;
+package com.example.assignment6server.models;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
+@Entity
 public class Course {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
   private String title;
+  @ManyToOne(targetEntity = User.class)
+  @JsonIgnore
+  private User author;
+  @OneToMany(mappedBy = "course")
   private List<Module> modules = new ArrayList<>();
-  private String author;
 
   public Course() {
   }
@@ -42,11 +57,16 @@ public class Course {
     this.modules = modules;
   }
 
-  public String getAuthor() {
+  public User getAuthor() {
     return author;
   }
 
-  public void setAuthor(String author) {
+  public void setAuthor(User author) {
     this.author = author;
+  }
+
+  //our implementation which we use to update the course
+  public void set(Course newCourse) {
+    this.title = newCourse.title;
   }
 }
