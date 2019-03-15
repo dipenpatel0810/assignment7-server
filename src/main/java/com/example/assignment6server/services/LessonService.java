@@ -1,9 +1,10 @@
-package com.example.wbdvassignment5javaserver.services;
+package com.example.assignment6server.services;
 
-import com.example.wbdvassignment5javaserver.models.Course;
-import com.example.wbdvassignment5javaserver.models.Lesson;
-import com.example.wbdvassignment5javaserver.models.Module;
+import com.example.assignment6server.models.Course;
+import com.example.assignment6server.models.Lesson;
+import com.example.assignment6server.models.Module;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,89 +19,66 @@ import java.util.Iterator;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "*",allowCredentials = "true",allowedHeaders = "*")
+@CrossOrigin(origins = "*", allowCredentials = "true", allowedHeaders = "*")
 public class LessonService {
-  List<Course> courses = CourseService.getCourses();
+  @Autowired
+  ModuleRepository moduleRepository;
 
-  //create new lesson in module whose id is mid
-  @PostMapping("/api/module/{mid}/lesson")
-  public Lesson createLesson(@PathVariable("mid") Integer mid, @RequestBody Lesson lesson) {
-    Date uniqueId = new Date();
-    int id = (int)(uniqueId.getTime() / 1000);
-    lesson.setId(id);
-    for (Course course : courses) {
-      for (Module module : course.getModules()) {
-        if (module.getId().equals(mid)) {
-          module.getLessons().add(lesson);
-          return lesson;
-        }
+  @Autowired
+  LessonRepository lessonRepository;
+
+  @Autowired
+  TopicRepository topicRepository;
+
+  @Autowired
+  WidgetRepository widgetRepository;
+
+  @PostMapping("/api/modules/{mid}/lessons")
+  public Lesson createLesson(@RequestBody Lesson lesson, @PathVariable("mid") Integer mid) {
+    lesson.setModule(moduleRepository.findById(mid).get());
+    lessonRepository.save(lesson);
+    if (lesson.getTopics() != null) {
+      for (Topic topic : lesson.getTopics()) {
+        topic.setLesson(lesson);
+        topicRepository.save(topic);
       }
     }
-    return new Lesson();
+    return lesson;
   }
 
-  //Retrieve all lessons in module whose id is mid
-  @GetMapping("/api/module/{mid}/lesson")
+  @GetMapping("/api/modules/{mid}/lessons")
   public List<Lesson> findAllLessons(@PathVariable("mid") Integer mid) {
-    for (Course course : courses) {
-      for (Module module : course.getModules()) {
-        if (module.getId().equals(mid)) {
-          return module.getLessons();
-        }
-      }
-    }
-    return null;
+    Module module = moduleRepository.findById(mid).get();
+    return lessonRepository.findAllLessons(module);
   }
 
-  //Retrieve the lesson whose id is lid
-  @GetMapping("/api/lesson/{lid}")
+  @GetMapping("/api/lessons/{lid}")
   public Lesson findLessonById(@PathVariable("lid") Integer lid) {
-    for (Course course : courses) {
-      for (Module module : course.getModules()) {
-        for (Lesson lesson : module.getLessons()) {
-          if (lesson.getId().equals(lid)) {
-            return lesson;
-          }
-        }
-      }
-    }
-    return new Lesson();
+    return lessonRepository.findById(lid).get();
   }
 
-  //update lesson whose id is lid
-  @PutMapping("/api/lesson/{lid}")
-  public void updateLesson(@PathVariable("lid") Integer lid, @RequestBody Lesson newLesson) {
-    for (Course course : courses) {
-      List<Module> modules = course.getModules();
-      for (Module module : modules) {
-        List<Lesson> lessons = module.getLessons();
-        for (Lesson lesson : lessons) {
-          if (lesson.getId().equals(lid)) {
-            int index = lessons.indexOf(lesson);
-            lessons.set(index, newLesson);
-            module.setLessons(lessons);
-            course.setModules(modules);
-          }
-        }
-      }
-    }
+  @PutMapping("/api/lessons/{lid}")
+  public Lesson updateLesson(@PathVariable("lid") Integer lid, @RequestBody Lesson newLesson) {
+    Lesson lesson = lessonRepository.findById(lid).get();
+    lesson.set(newLesson);
+    lessonRepository.save(lesson);
+    return lesson;
   }
 
-  //deletes a lesson whose id is lid
-  @DeleteMapping("/api/lesson/{lid}")
+  @DeleteMapping("/api/lessons/{lid}")
   public void deleteLesson(@PathVariable("lid") Integer lid) {
-    for (Course course : courses) {
-      List<Module> modules = course.getModules();
-      for (Module module : modules) {
-        List<Lesson> lessons = module.getLessons();
-        for (Iterator<Lesson> lesson = lessons.iterator(); lesson.hasNext(); ) {
-          Lesson l = lesson.next();
-          if (l.getId().equals(lid)) {
-            lesson.remove();
+    Lesson lesson = lessonRepository.findById(lid).get();
+    if (lesson.getTopics() != null) {
+      for (Topic topic : lesson.getTopics()) {
+        if (topic.getWidgets() != null) {
+          for (Widget widget : topic.getWidgets()) {
+            widgetRepository.delete(widget);
           }
         }
+        topicRepository.delete(topic);
       }
     }
-  }
 
+    lessonRepository.deleteById(lid);
+  }
 }
