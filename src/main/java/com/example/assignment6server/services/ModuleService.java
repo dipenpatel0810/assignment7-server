@@ -1,8 +1,9 @@
-package com.example.wbdvassignment5javaserver.services;
+package com.example.assignment6server.services;
 
-import com.example.wbdvassignment5javaserver.models.Course;
-import com.example.wbdvassignment5javaserver.models.Module;
+import com.example.assignment6server.models.Course;
+import com.example.assignment6server.models.Module;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,77 +18,80 @@ import java.util.Iterator;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "*",allowCredentials = "true",allowedHeaders = "*")
+@CrossOrigin(origins = "*", allowCredentials = "true", allowedHeaders = "*")
 public class ModuleService {
-  List<Course> courses = CourseService.getCourses();
+  @Autowired
+  CourseRepository courseRepository;
 
-  //  create a new module in course whose id is cid
-  @PostMapping(path = "/api/courses/{cid}/modules", consumes = "application/json", produces = "application/json")
+  @Autowired
+  ModuleRepository moduleRepository;
+
+  @Autowired
+  LessonRepository lessonRepository;
+
+  @Autowired
+  TopicRepository topicRepository;
+
+  @Autowired
+  WidgetRepository widgetRepository;
+
+  @PostMapping("/api/courses/{cid}/modules")
   public Module createModule(@PathVariable("cid") Integer cid, @RequestBody Module module) {
-    Date uniqueId = new Date();
-    int id = (int) (uniqueId.getTime() / 1000);
-    module.setId(id);
-    for (Course course : courses) {
-      if (course.getId().equals(cid)) {
-        course.getModules().add(module);
-        return module;
+    module.setCourse(courseRepository.findById(cid).get());
+    moduleRepository.save(module);
+    if (module.getLessons() != null) {
+      for (Lesson lesson : module.getLessons()) {
+        lesson.setModule(module);
+        lessonRepository.save(lesson);
+        if (lesson.getTopics() != null) {
+          for (Topic topic : lesson.getTopics()) {
+            topic.setLesson(lesson);
+            topicRepository.save(topic);
+          }
+        }
       }
     }
-    return new Module();
+    return module;
   }
 
-  //Retrieve all modules in course whose id is cid
   @GetMapping("/api/courses/{cid}/modules")
   public List<Module> findAllModules(@PathVariable("cid") Integer cid) {
-    for (Course course : courses) {
-      if (course.getId().equals(cid)) {
-        return course.getModules();
-      }
-    }
-    return null;
+    Course course = courseRepository.findById(cid).get();
+    return moduleRepository.findAllModules(course);
   }
 
-  //Retrieve module whose id is mid
   @GetMapping("/api/modules/{mid}")
   public Module findModuleById(@PathVariable("mid") Integer mid) {
-    for (Course course : courses) {
-      for (Module module : course.getModules()) {
-        if (module.getId().equals(mid)) {
-          return module;
-        }
-      }
-    }
-    return new Module();
+    return moduleRepository.findById(mid).get();
   }
 
-  //Update module whose id is mid
-  @PutMapping(path = "/api/modules/{mid}", consumes = "application/json", produces = "application/json")
-  public void updateModule(@PathVariable("mid") Integer mid, @RequestBody Module newModule) {
-    for (Course course : courses) {
-      List<Module> modules = course.getModules();
-      for (Module module : modules) {
-        if (module.getId().equals(mid)) {
-          int index = modules.indexOf(module);
-          modules.set(index, newModule);
-          course.setModules(modules);
-        }
-      }
-    }
+  @PutMapping("/api/modules/{mid}")
+  public Module updateModule(@RequestBody Module newModule, @PathVariable("mid") Integer mid) {
+    Module module = moduleRepository.findById(mid).get();
+    module.set(newModule);
+    moduleRepository.save(module);
+    return module;
   }
 
-  //Delete a module whose id is mid
   @DeleteMapping("/api/modules/{mid}")
   public void deleteModule(@PathVariable("mid") Integer mid) {
-    for (Course course : courses) {
-      List<Module> modules = course.getModules();
-      for (Iterator<Module> module = modules.iterator(); module.hasNext(); ) {
-        Module m = module.next();
-        if (m.getId().equals(mid)) {
-          module.remove();
+    Module module = moduleRepository.findById(mid).get();
+    if (module.getLessons() != null) {
+      for (Lesson lesson : module.getLessons()) {
+        if (lesson.getTopics() != null) {
+          for (Topic topic : lesson.getTopics()) {
+            if (topic.getWidgets() != null) {
+              for (Widget widget : topic.getWidgets()) {
+                widgetRepository.delete(widget);
+              }
+            }
+            topicRepository.delete(topic);
+          }
         }
+        lessonRepository.delete(lesson);
       }
     }
+    moduleRepository.deleteById(mid);
   }
-
 
 }
