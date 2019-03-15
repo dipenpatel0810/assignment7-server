@@ -1,6 +1,7 @@
 package com.example.assignment6server.services;
 
 import com.example.assignment6server.models.User;
+import com.example.assignment6server.repositories.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
