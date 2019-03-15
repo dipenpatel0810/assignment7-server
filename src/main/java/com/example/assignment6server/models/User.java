@@ -1,6 +1,17 @@
 package com.example.assignment6server.models;
 
+import java.util.List;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+
+@Entity
 public class User {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
   private String username;
   private String password;
@@ -9,6 +20,8 @@ public class User {
   private String email;
   private String phone;
   private String dob;
+  @OneToMany(mappedBy = "author")
+  private List<Course> authoredCourses;
 
   public User() {
   }
@@ -81,5 +94,20 @@ public class User {
 
   public void setDob(String dob) {
     this.dob = dob;
+  }
+
+  public List<Course> getAuthoredCourses() {
+    return authoredCourses;
+  }
+
+  public void setAuthoredCourses(List<Course> authoredCourses) {
+    this.authoredCourses = authoredCourses;
+  }
+
+  public void set(User newUser){
+    this.username = newUser.username;
+    this.email = newUser.email;
+    this.phone = newUser.phone;
+    this.dob = newUser.dob;
   }
 }
