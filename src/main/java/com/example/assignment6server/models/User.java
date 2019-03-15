@@ -1,4 +1,4 @@
-package com.example.wbdvassignment5javaserver.models;
+package com.example.assignment6server.models;
 
 public class User {
   private Integer id;
