@@ -81,8 +81,9 @@ public class CourseService {
 
   @GetMapping("/api/courses")
   public List<Course> findAllCourses(HttpSession session) {
-    User author = (User) session.getAttribute("currentUser");
-    return courseRepository.findAllCourses(author);
+//    User author = (User) session.getAttribute("currentUser");
+//    return courseRepository.findAllCourses(author);
+    return (List<Course>) courseRepository.findAll();
   }
 
   @GetMapping("/api/courses/{cid}")
